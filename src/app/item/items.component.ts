@@ -4,6 +4,12 @@ import { Label } from 'ui/label';
 
 import { AbsoluteLayout as Layout } from 'ui/layouts/absolute-layout';
 
+interface DragLabel {
+    label: Label,
+    x: number;
+    y: number;
+}
+
 @Component({
     selector: "ns-dand",
     moduleId: module.id,
@@ -11,7 +17,6 @@ import { AbsoluteLayout as Layout } from 'ui/layouts/absolute-layout';
     <ActionBar title="My App" class="action-bar">
     </ActionBar>
     <AbsoluteLayout #layout width="100%" height="100%" backgroundColor="gray" (touch)="onTouch($event)">
-    <Label #dragLabel text="Drag Me" (pan)="onPan($event)"></Label>
     </AbsoluteLayout> 
 
     
@@ -19,32 +24,18 @@ import { AbsoluteLayout as Layout } from 'ui/layouts/absolute-layout';
   styles: ['h1 { font-weight: normal; }']
 })
 export class ItemsComponent implements OnInit {
-    @ViewChild("dragLabel") dragElementRef: ElementRef;
     @ViewChild("layout") layoutElementRef: ElementRef;
-    dragLabel: Label;
-    newLabel: Label;
+    labels: Label[] = [];
     layout: Layout;
     prevDeltaX: number;
     prevDeltaY: number;
     panning = false;
+    polygon : {x: number, y: number}[];
 
     constructor() { }
 
     ngOnInit(): void {
-        this.dragLabel = <Label>this.dragElementRef.nativeElement;
         this.layout = <Layout>this.layoutElementRef.nativeElement;
-        this.newLabel = new Label();
-        this.newLabel.text = "Hello";
-        this.layout.addChild(this.newLabel);
-        this.dragLabel.translateX = 0;
-        this.dragLabel.translateY = 0;
-        this.dragLabel.scaleX = 1;
-        this.dragLabel.scaleY = 1;
-
-        const lSize = this.layout.getActualSize();
-        const dSize = this.dragLabel.getActualSize();
-        this.dragLabel.translateX = lSize.width - dSize.width;
-        this.dragLabel.translateY = lSize.height - dSize.height;
     }
 
     onTouch(args: TouchGestureEventData) {
@@ -52,16 +43,30 @@ export class ItemsComponent implements OnInit {
             this.panning = false;
         }
         else if (!this.panning && args.action === 'up' ) {
-            this.newLabel = new Label();
-            this.newLabel.text = "X";
-            this.layout.addChild(this.newLabel);
-            this.newLabel.translateX = args.getX();
-            this.newLabel.translateY = args.getY();
-            console.log("touch:", args.getX(), args.getY());
+            const label = new Label();
+            label.text = '' + this.labels.length;
+            const myPan = this.onPan.bind(this, label)
+            label.on('pan', myPan);
+            this.layout.addChild(label);
+            label.translateX = args.getX();
+            label.translateY = args.getY();
+            this.labels.push(label);
+            this.refreshPoligon();
         }
     }
 
-    onPan(args: PanGestureEventData) {
+    refreshPoligon() {
+        this.polygon =
+            this.labels.filter(label=>label.text).
+            map(label => (
+                {'x': Math.round(label.translateX),
+                 'y': Math.round(label.translateY)
+                })
+            );
+        this.polygon.forEach(p => console.log(p.x, p.y));
+    }
+
+    onPan(label: Label, args: PanGestureEventData) {
         if (args.state === 1) // down
         {
           this.panning = true;
@@ -70,13 +75,22 @@ export class ItemsComponent implements OnInit {
         }
         else if (args.state === 2) // panning
         {
-          this.dragLabel.translateX += args.deltaX - this.prevDeltaX;
-          this.dragLabel.translateY += args.deltaY - this.prevDeltaY;
+          label.translateX += args.deltaX - this.prevDeltaX;
+          label.translateY += args.deltaY - this.prevDeltaY;
           this.prevDeltaX = args.deltaX;
           this.prevDeltaY = args.deltaY;
+
+          if (label.translateX < 0 || label.translateY < 0) {
+              label.off('pan');
+              label.text = '';
+              this.layout.removeChild(label);
+              //TODO: meaningfully remove labels from memory
+              this.refreshPoligon()
+          }
         }
         else if (args.state === 3) // up
         {
+            this.refreshPoligon();
         }
 
     }
