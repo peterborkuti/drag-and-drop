@@ -1,21 +1,68 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, ViewChild, ElementRef } from "@angular/core";
+import { PanGestureEventData } from "tns-core-modules/ui/gestures/gestures";
+import { Label } from 'ui/label';
 
-import { Item } from "./item";
-import { ItemService } from "./item.service";
+import { AbsoluteLayout as Layout } from 'ui/layouts/absolute-layout';
 
 @Component({
-    selector: "ns-items",
+    selector: "ns-dand",
     moduleId: module.id,
-    templateUrl: "./items.component.html",
+    template: `
+    <ActionBar title="My App" class="action-bar">
+    </ActionBar>
+    <AbsoluteLayout #layout width="100%" height="100%" backgroundColor="gray">
+    <Label #dragLabel text="Drag Me" (pan)="onPan($event)"></Label>
+    </AbsoluteLayout> 
+
+    
+  `,
+  styles: ['h1 { font-weight: normal; }']
 })
 export class ItemsComponent implements OnInit {
-    items: Item[];
+    @ViewChild("dragLabel") dragElementRef: ElementRef;
+    @ViewChild("layout") layoutElementRef: ElementRef;
+    dragLabel: Label;
+    newLabel: Label;
+    layout: Layout;
+    prevDeltaX: number;
+    prevDeltaY: number;
 
-    // This pattern makes use of Angular’s dependency injection implementation to inject an instance of the ItemService service into this class.
-    // Angular knows about this service because it is included in your app’s main NgModule, defined in app.module.ts.
-    constructor(private itemService: ItemService) { }
+    constructor() { }
 
     ngOnInit(): void {
-        this.items = this.itemService.getItems();
+        this.dragLabel = <Label>this.dragElementRef.nativeElement;
+        this.layout = <Layout>this.layoutElementRef.nativeElement;
+        this.newLabel = new Label();
+        this.newLabel.text = "Hello";
+        this.layout.addChild(this.newLabel);
+        this.dragLabel.translateX = 0;
+        this.dragLabel.translateY = 0;
+        this.dragLabel.scaleX = 1;
+        this.dragLabel.scaleY = 1;
+
+        const lSize = this.layout.getActualSize();
+        const dSize = this.dragLabel.getActualSize();
+        this.dragLabel.translateX = lSize.width - dSize.width;
+        this.dragLabel.translateY = lSize.height - dSize.height;
+    }
+
+    onPan(args: PanGestureEventData) {
+        if (args.state === 1) // down
+        {
+          this.prevDeltaX = 0;
+          this.prevDeltaY = 0;
+        }
+        else if (args.state === 2) // panning
+        {
+          this.dragLabel.translateX += args.deltaX - this.prevDeltaX;
+          this.dragLabel.translateY += args.deltaY - this.prevDeltaY;
+          this.prevDeltaX = args.deltaX;
+          this.prevDeltaY = args.deltaY;
+        }
+        else if (args.state === 3) // up
+        {
+
+        }
+
     }
 }
