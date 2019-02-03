@@ -29,8 +29,10 @@ export class ItemsComponent implements OnInit {
     layout: Layout;
     prevDeltaX: number;
     prevDeltaY: number;
+    translateX: number;
+    translateY: number;
     panning = false;
-    polygon : {x: number, y: number}[];
+    polygon : {'index': number, x: number, y: number}[];
 
     constructor() { }
 
@@ -59,11 +61,18 @@ export class ItemsComponent implements OnInit {
         this.polygon =
             this.labels.filter(label=>label.text).
             map(label => (
-                {'x': Math.round(label.translateX),
-                 'y': Math.round(label.translateY)
+                {
+                    'index': +label.text,
+                    'x': Math.round(label.translateX),
+                    'y': Math.round(label.translateY)
                 })
             );
-        this.polygon.forEach(p => console.log(p.x, p.y));
+        this.polygon.forEach(p => console.log(p.index, p.x, p.y));
+    }
+
+    moveLabel(label: Label, touchX: number, touchY: number) {
+        label.translateX = touchX;
+        label.translateY = touchY;
     }
 
     onPan(label: Label, args: PanGestureEventData) {
@@ -72,11 +81,16 @@ export class ItemsComponent implements OnInit {
           this.panning = true;
           this.prevDeltaX = 0;
           this.prevDeltaY = 0;
+          this.translateX = label.translateX;
+          this.translateY = label.translateY;
         }
         else if (args.state === 2) // panning
         {
-          label.translateX += args.deltaX - this.prevDeltaX;
-          label.translateY += args.deltaY - this.prevDeltaY;
+          this.translateX += args.deltaX - this.prevDeltaX;
+          this.translateY += args.deltaY - this.prevDeltaY;
+
+          this.moveLabel(label, this.translateX, this.translateY);
+
           this.prevDeltaX = args.deltaX;
           this.prevDeltaY = args.deltaY;
 
