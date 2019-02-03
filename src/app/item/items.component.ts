@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, ElementRef } from "@angular/core";
-import { PanGestureEventData } from "tns-core-modules/ui/gestures/gestures";
+import { PanGestureEventData, GestureEventData, TouchGestureEventData } from "tns-core-modules/ui/gestures/gestures";
 import { Label } from 'ui/label';
 
 import { AbsoluteLayout as Layout } from 'ui/layouts/absolute-layout';
@@ -10,7 +10,7 @@ import { AbsoluteLayout as Layout } from 'ui/layouts/absolute-layout';
     template: `
     <ActionBar title="My App" class="action-bar">
     </ActionBar>
-    <AbsoluteLayout #layout width="100%" height="100%" backgroundColor="gray">
+    <AbsoluteLayout #layout width="100%" height="100%" backgroundColor="gray" (touch)="onTouch($event)">
     <Label #dragLabel text="Drag Me" (pan)="onPan($event)"></Label>
     </AbsoluteLayout> 
 
@@ -26,6 +26,7 @@ export class ItemsComponent implements OnInit {
     layout: Layout;
     prevDeltaX: number;
     prevDeltaY: number;
+    panning = false;
 
     constructor() { }
 
@@ -46,9 +47,24 @@ export class ItemsComponent implements OnInit {
         this.dragLabel.translateY = lSize.height - dSize.height;
     }
 
+    onTouch(args: TouchGestureEventData) {
+        if (this.panning && args.action === 'up') {
+            this.panning = false;
+        }
+        else if (!this.panning && args.action === 'up' ) {
+            this.newLabel = new Label();
+            this.newLabel.text = "X";
+            this.layout.addChild(this.newLabel);
+            this.newLabel.translateX = args.getX();
+            this.newLabel.translateY = args.getY();
+            console.log("touch:", args.getX(), args.getY());
+        }
+    }
+
     onPan(args: PanGestureEventData) {
         if (args.state === 1) // down
         {
+          this.panning = true;
           this.prevDeltaX = 0;
           this.prevDeltaY = 0;
         }
@@ -61,7 +77,6 @@ export class ItemsComponent implements OnInit {
         }
         else if (args.state === 3) // up
         {
-
         }
 
     }
