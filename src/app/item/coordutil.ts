@@ -7,9 +7,9 @@ function getNeighboursArrayIndexes(dragLabels: DragLabel[], labelArrayIndex: num
     return [leftNeighbourArrayIndex, rightNeighbourArrayIndex];
 }
 
-function getDistance(dragLabels: DragLabel[], labelArrayIndex, neighbourIndex): number {
-    const dx = dragLabels[neighbourIndex].x - dragLabels[labelArrayIndex].x;
-    const dy = dragLabels[neighbourIndex].y - dragLabels[labelArrayIndex].y;
+function getDistance(dragLabels: DragLabel[], point: Point, neighbourIndex): number {
+    const dx = dragLabels[neighbourIndex].x - point.x;
+    const dy = dragLabels[neighbourIndex].y - point.y;
     return Math.sqrt( dx * dx + dy * dy);
 }
 
@@ -31,7 +31,12 @@ export function getLabelArrayIndex(dragLabels: DragLabel[], labelIndex: number):
     return labelArrayIndex;
 }
 
-export function getClosestNeighbourArrayIndex(dragLabels: DragLabel[], labelIndex: number): number {
+export function getClosestNeighbourArrayIndex(
+        dragLabels: DragLabel[],
+        labelIndex: number,
+        point: Point): number
+    {
+
     if (!dragLabels || dragLabels.length === 0) {
         throw new Error("Array should not be empty");
     }
@@ -49,8 +54,8 @@ export function getClosestNeighbourArrayIndex(dragLabels: DragLabel[], labelInde
     const indexes = getNeighboursArrayIndexes(dragLabels, labelArrayIndex);
 
     const distances = [
-        getDistance(dragLabels, labelArrayIndex, indexes[0]),
-        getDistance(dragLabels, labelArrayIndex, indexes[1])
+        getDistance(dragLabels, point, indexes[0]),
+        getDistance(dragLabels, point, indexes[1])
     ];
 
     return (distances[0] < distances[1]) ? indexes[0] : indexes[1];

@@ -81,12 +81,13 @@ export class ItemsComponent implements OnInit {
     }
 
     moveLabel(label: Label, touchX: number, touchY: number) {
+        const userPoint = {x: touchX, y: touchY};
         const labelArrayIndex = getLabelArrayIndex(this.polygon, +label.text);
-        const neighBourArrayIndex = getClosestNeighbourArrayIndex(this.polygon, +label.text);
+        const neighBourArrayIndex = getClosestNeighbourArrayIndex(this.polygon, +label.text, userPoint);
         const dragLabel = this.polygon[labelArrayIndex];
         const neighbour = this.polygon[neighBourArrayIndex];
         const line = {x0: dragLabel.x, y0: dragLabel.y, x1: neighbour.x, y1: neighbour.y};
-        const point = projectPointOnToLine(line, {x: touchX, y: touchY});
+        const point = projectPointOnToLine(line, userPoint);
         //colorizeClosestNeighbour(label.text)
         label.translateX = point.x;
         label.translateY = point.y;
