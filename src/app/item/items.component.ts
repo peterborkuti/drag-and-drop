@@ -1,14 +1,13 @@
+import { Image } from 'ui/image';
 import { Component, OnInit, ViewChild, ElementRef } from "@angular/core";
 import { PanGestureEventData, GestureEventData, TouchGestureEventData } from "tns-core-modules/ui/gestures/gestures";
 import { Label } from 'ui/label';
+import { DragLabel } from './interfaces';
 
 import { AbsoluteLayout as Layout } from 'ui/layouts/absolute-layout';
+import {ImageSource, fromFile, fromResource, fromBase64} from "tns-core-modules/image-source";
 
-interface DragLabel {
-    label: Label,
-    x: number;
-    y: number;
-}
+import { getClosestNeighbourArrayIndex, projectPointOnToLine, getLabelArrayIndex } from './coordutil';
 
 @Component({
     selector: "ns-dand",
@@ -17,11 +16,10 @@ interface DragLabel {
     <ActionBar title="My App" class="action-bar">
     </ActionBar>
     <AbsoluteLayout #layout width="100%" height="100%" backgroundColor="gray" (touch)="onTouch($event)">
+    <ContentView id="hm" width="100" height="100" style="clip-path: circle(80% at 55% 40%);"></ContentView>
     </AbsoluteLayout> 
-
-    
-  `,
-  styles: ['h1 { font-weight: normal; }']
+    `,
+  styles: ['h1 { font-weight: normal; }', '#hm {background-color: red;}']
 })
 export class ItemsComponent implements OnInit {
     @ViewChild("layout") layoutElementRef: ElementRef;
@@ -32,12 +30,20 @@ export class ItemsComponent implements OnInit {
     translateX: number;
     translateY: number;
     panning = false;
-    polygon : {'index': number, x: number, y: number}[];
+    polygon : DragLabel[];
 
     constructor() { }
 
     ngOnInit(): void {
         this.layout = <Layout>this.layoutElementRef.nativeElement;
+        //const imageSource = fromBase64("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==");
+        //const image = new Image();
+        //image.imageSource = imageSource;
+        //image.width = 100;
+        //image.height = 100;
+        //image.addCss("clip-path: circle(40%);");
+        //image.setInlineStyle("clip-path: circle(40%);");
+        //this.layout.addChild(image);
     }
 
     onTouch(args: TouchGestureEventData) {
@@ -62,17 +68,28 @@ export class ItemsComponent implements OnInit {
             this.labels.filter(label=>label.text).
             map(label => (
                 {
-                    'index': +label.text,
+                    'labelIndex': +label.text,
                     'x': Math.round(label.translateX),
                     'y': Math.round(label.translateY)
                 })
             );
-        this.polygon.forEach(p => console.log(p.index, p.x, p.y));
+        this.polygon.forEach(p => console.log(p.labelIndex, p.x, p.y));
+    }
+
+    colorizeClosestNeighbour(labelText: string) {
+
     }
 
     moveLabel(label: Label, touchX: number, touchY: number) {
-        label.translateX = touchX;
-        label.translateY = touchY;
+        const labelArrayIndex = getLabelArrayIndex(this.polygon, +label.text);
+        const neighBourArrayIndex = getClosestNeighbourArrayIndex(this.polygon, +label.text);
+        const dragLabel = this.polygon[labelArrayIndex];
+        const neighbour = this.polygon[neighBourArrayIndex];
+        const line = {x0: dragLabel.x, y0: dragLabel.y, x1: neighbour.x, y1: neighbour.y};
+        const point = projectPointOnToLine(line, {x: touchX, y: touchY});
+        //colorizeClosestNeighbour(label.text)
+        label.translateX = point.x;
+        label.translateY = point.y;
     }
 
     onPan(label: Label, args: PanGestureEventData) {
