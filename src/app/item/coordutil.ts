@@ -7,10 +7,17 @@ function getNeighboursArrayIndexes(dragLabels: DragLabel[], labelArrayIndex: num
     return [leftNeighbourArrayIndex, rightNeighbourArrayIndex];
 }
 
-function getDistance(dragLabels: DragLabel[], point: Point, neighbourIndex): number {
-    const dx = dragLabels[neighbourIndex].x - point.x;
-    const dy = dragLabels[neighbourIndex].y - point.y;
+function distance(point1: Point, point2: Point): number {
+    const dx = point1.x - point2.x;
+    const dy = point1.y - point2.y;
+
     return Math.sqrt( dx * dx + dy * dy);
+}
+
+function getDistance(dragLabels: DragLabel[], point: Point, neighbourIndex): number {
+    const [x , y] = [dragLabels[neighbourIndex].x, dragLabels[neighbourIndex].x];
+
+    return distance(point, {x, y});
 }
 
 export function getLabelArrayIndex(dragLabels: DragLabel[], labelIndex: number): number {
@@ -53,9 +60,15 @@ export function getClosestNeighbourArrayIndex(
 
     const indexes = getNeighboursArrayIndexes(dragLabels, labelArrayIndex);
 
+    const dragLabel = dragLabels[labelArrayIndex];
+    const dragLabel1 = dragLabels[indexes[0]];
+    const dragLabel2 = dragLabels[indexes[1]];
+
+    const line1 = {x0: dragLabel1.x, y0:dragLabel1.y, x1:dragLabel.x, y1: dragLabel.y};
+    const line2 = {x0: dragLabel2.x, y0:dragLabel2.y, x1:dragLabel.x, y1: dragLabel.y};
     const distances = [
-        getDistance(dragLabels, point, indexes[0]),
-        getDistance(dragLabels, point, indexes[1])
+        distanceOfLineAndPoint(line1, point),
+        distanceOfLineAndPoint(line2, point)
     ];
 
     return (distances[0] < distances[1]) ? indexes[0] : indexes[1];
@@ -102,4 +115,10 @@ export function projectPointOnToLine(
     const y = m * (x - line.x0) + line.y0;
 
     return constrain(line, {x, y});
+}
+
+function distanceOfLineAndPoint(line: Line, point: Point): number {
+    const pointOnLine = projectPointOnToLine(line, point);
+
+    return distance(point, pointOnLine);
 }
