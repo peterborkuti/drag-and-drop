@@ -2,14 +2,16 @@ import * as cu from '../../../src/app/item/coordutil';
 import { DragLabel } from '../../../src/app/item/interfaces';
 
 describe('getClosestNeighbour', () => {
+    const anyPoint = {x:0, y: 0};
+
     it('should throw exception when there is no element in the array', () => {
-        expect(function() {cu.getClosestNeighbourArrayIndex([], 0)}).toThrow();
+        expect(function() {cu.getClosestNeighbourArrayIndex([], 0, anyPoint)}).toThrow();
     })
 
     it('should return with the only one index if there is only one element in the array', () => {
         const index = 1;
         const e: DragLabel = {labelIndex: index, x: 0, y: 0};
-        expect(cu.getClosestNeighbourArrayIndex([e], 1)).toBe(0);
+        expect(cu.getClosestNeighbourArrayIndex([e], 1, anyPoint)).toBe(0);
     })
 
     it('should return with the other index if there are two elements in the array and the input is one', () => {
@@ -19,7 +21,7 @@ describe('getClosestNeighbour', () => {
             {labelIndex: oneIndex, x: 0, y: 0},
             {labelIndex: otherIndex, x: 0, y: 0}
         ];
-        expect(cu.getClosestNeighbourArrayIndex(elements, oneIndex)).toBe(1);
+        expect(cu.getClosestNeighbourArrayIndex(elements, oneIndex, anyPoint)).toBe(1);
     })
 
     it('should throw error when labelIndex is not in array', () => {
@@ -31,12 +33,13 @@ describe('getClosestNeighbour', () => {
             {labelIndex: otherIndex, x: 0, y: 0}
         ];
         expect(function() {
-            cu.getClosestNeighbourArrayIndex(elements, notExistingIndex) }
+            cu.getClosestNeighbourArrayIndex(elements, notExistingIndex, anyPoint) }
             ).toThrow();
     })
 
     it('should return with the closest neighbour', () => {
         const oneNeighbour = 2;
+        const oneNeighbourArrayIndex = 1;
         const labelIndex = 3;
         const otherNeighbour = 4;
         const otherNeighbourArrayIndex = 3;
@@ -44,11 +47,18 @@ describe('getClosestNeighbour', () => {
             {labelIndex: 1, x: 0, y: 0},
             {labelIndex: oneNeighbour, x: 50, y: 50},
             {labelIndex: labelIndex, x: 0, y: 0},
-            {labelIndex: otherNeighbour, x: 20, y: 20},
+            {labelIndex: otherNeighbour, x: 20, y: 40},
             {labelIndex: 5, x: 0, y: 0}
         ];
 
-        expect(cu.getClosestNeighbourArrayIndex(elements, labelIndex)).
+        const pointCloseToOne = {x: 51, y: 51}
+
+        expect(cu.getClosestNeighbourArrayIndex(elements, labelIndex, pointCloseToOne)).
+        toBe(oneNeighbourArrayIndex);
+
+        const pointCloseToOther = {x: 21, y: 41}
+
+        expect(cu.getClosestNeighbourArrayIndex(elements, labelIndex, pointCloseToOther)).
         toBe(otherNeighbourArrayIndex);
     })
 
@@ -57,19 +67,26 @@ describe('getClosestNeighbour', () => {
         const oneNeighbourArrayIndex = 0;
         const labelIndex = 4;
         const otherNeighbour = 3;
+        const otherNeighbourArrayIndex = 2;
         const elements = [
             {labelIndex: oneNeighbour, x: 50, y: 50},
             {labelIndex: 2, x: 0, y: 0},
-            {labelIndex: otherNeighbour, x: 70, y: 70},
+            {labelIndex: otherNeighbour, x: 20, y: 70},
             {labelIndex: labelIndex, x: 0, y: 0},
         ];
 
-        expect(cu.getClosestNeighbourArrayIndex(elements, labelIndex)).
+        const pointCloseToOne = {x: 51, y: 51};
+        expect(cu.getClosestNeighbourArrayIndex(elements, labelIndex, pointCloseToOne)).
         toBe(oneNeighbourArrayIndex);
+
+        const pointCloseToOther = {x: 19, y: 69};
+        expect(cu.getClosestNeighbourArrayIndex(elements, labelIndex, pointCloseToOther)).
+        toBe(otherNeighbourArrayIndex);
     })
 
     it('should return with the closest neighbour - circular case - 2', () => {
         const oneNeighbour = 2;
+        const oneNeighbourArrayIndex = 1;
         const labelIndex = 1;
         const otherNeighbour = 4;
         const otherNeighbourArrayIndex = 3;
@@ -77,10 +94,15 @@ describe('getClosestNeighbour', () => {
             {labelIndex: labelIndex, x: 0, y: 0},
             {labelIndex: oneNeighbour, x: 50, y: 50},
             {labelIndex: 3, x: 0, y: 0},
-            {labelIndex: otherNeighbour, x: 20, y: 20},
+            {labelIndex: otherNeighbour, x: 20, y: 40},
         ];
 
-        expect(cu.getClosestNeighbourArrayIndex(elements, labelIndex)).
+        const pointCloseToOne = {x: 51, y: 51};
+        expect(cu.getClosestNeighbourArrayIndex(elements, labelIndex, pointCloseToOne)).
+        toBe(oneNeighbourArrayIndex);
+
+        const pointCloseToOther = {x: 19, y: 39};
+        expect(cu.getClosestNeighbourArrayIndex(elements, labelIndex, pointCloseToOther)).
         toBe(otherNeighbourArrayIndex);
     })
 })
